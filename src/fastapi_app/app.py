@@ -8,10 +8,12 @@ from fastapi import Depends, FastAPI, Form, Request, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
 from sqlalchemy.sql import func
 from sqlmodel import Session, select
-
-from .models import Restaurant, Review, engine
+from fastapi.middleware.cors import CORSMiddleware
+from .models import  User, engine
+from fastapi import HTTPException
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
@@ -22,6 +24,29 @@ if os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING"):
 
 # Setup FastAPI app:
 app = FastAPI()
+
+# For testing, we allow everything
+# In production, replace with your actual web frontend URLs
+if os.getenv("RUNNING_IN_PRODUCTION"):
+    allowed_origins = [
+        "https://your-production-frontend.com",
+        "https://another-frontend.com",
+    ]
+else:
+    allowed_origins = [
+        "http://localhost:19006",  # Expo web
+        "http://localhost:3000",   # React web dev server
+        "http://localhost:8081", 
+    ]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,  # Mobile apps don’t need CORS, web does
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 parent_path = pathlib.Path(__file__).parent.parent
 app.mount("/mount", StaticFiles(directory=parent_path / "static"), name="static")
 templates = Jinja2Templates(directory=parent_path / "templates")
@@ -36,87 +61,24 @@ def get_db_session():
         yield session
 
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request, session: Session = Depends(get_db_session)):
-    logger.info("root called")
-    statement = (
-        select(Restaurant, func.avg(Review.rating).label("avg_rating"), func.count(Review.id).label("review_count"))
-        .outerjoin(Review, Review.restaurant == Restaurant.id)
-        .group_by(Restaurant.id)
-    )
-    results = session.exec(statement).all()
-
-    restaurants = []
-    for restaurant, avg_rating, review_count in results:
-        restaurant_dict = restaurant.dict()
-        restaurant_dict["avg_rating"] = avg_rating
-        restaurant_dict["review_count"] = review_count
-        restaurant_dict["stars_percent"] = round((float(avg_rating) / 5.0) * 100) if review_count > 0 else 0
-        restaurants.append(restaurant_dict)
-
-    return templates.TemplateResponse("index.html", {"request": request, "restaurants": restaurants})
+class LoginRequest(BaseModel):
+    username: str
+    password: str
 
 
-@app.get("/create", response_class=HTMLResponse)
-async def create_restaurant(request: Request):
-    logger.info("Request for add restaurant page received")
-    return templates.TemplateResponse("create_restaurant.html", {"request": request})
+@app.post("/auth/login")
+async def login(data: LoginRequest, session: Session = Depends(get_db_session)):
+    if not data.username or not data.password:
+        raise HTTPException(status_code=400, detail="Username and password are required")
+
+    user = session.exec(select(User).where(User.username == data.username)).first()
+    if not user or user.password != data.password:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+
+    token = f"dummy-token-for-{user.id}"
+    return {"token": token, "user_id": user.id, "username": user.username}
 
 
-@app.post("/add", response_class=RedirectResponse)
-async def add_restaurant(
-    request: Request, restaurant_name: str = Form(...), street_address: str = Form(...), description: str = Form(...),
-    session: Session = Depends(get_db_session)
-):
-    logger.info("name: %s address: %s description: %s", restaurant_name, street_address, description)
-    restaurant = Restaurant()
-    restaurant.name = restaurant_name
-    restaurant.street_address = street_address
-    restaurant.description = description
-    session.add(restaurant)
-    session.commit()
-    session.refresh(restaurant)
-
-    return RedirectResponse(url=app.url_path_for("details", id=restaurant.id), status_code=status.HTTP_303_SEE_OTHER)
-
-
-@app.get("/details/{id}", response_class=HTMLResponse)
-async def details(request: Request, id: int, session: Session = Depends(get_db_session)):
-    restaurant = session.exec(select(Restaurant).where(Restaurant.id == id)).first()
-    reviews = session.exec(select(Review).where(Review.restaurant == id)).all()
-
-    review_count = len(reviews)
-
-    avg_rating = 0
-    if review_count > 0:
-        avg_rating = sum(review.rating for review in reviews if review.rating is not None) / review_count
-
-    restaurant_dict = restaurant.dict()
-    restaurant_dict["avg_rating"] = avg_rating
-    restaurant_dict["review_count"] = review_count
-    restaurant_dict["stars_percent"] = round((float(avg_rating) / 5.0) * 100) if review_count > 0 else 0
-
-    return templates.TemplateResponse(
-        "details.html", {"request": request, "restaurant": restaurant_dict, "reviews": reviews}
-    )
-
-
-@app.post("/review/{id}", response_class=RedirectResponse)
-async def add_review(
-    request: Request,
-    id: int,
-    user_name: str = Form(...),
-    rating: str = Form(...),
-    review_text: str = Form(...),
-    session: Session = Depends(get_db_session),
-):
-    review = Review()
-    review.restaurant = id
-    review.review_date = datetime.now()
-    review.user_name = user_name
-    review.rating = int(rating)
-    review.review_text = review_text
-    session.add(review)
-    session.commit()
-
-    return RedirectResponse(url=app.url_path_for("details", id=id), status_code=status.HTTP_303_SEE_OTHER)
+@app.get("/")
+async def root():
+    return {"message": "Cornell Health App is running!"}
