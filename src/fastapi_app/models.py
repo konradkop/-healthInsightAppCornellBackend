@@ -61,5 +61,6 @@ class User(SQLModel, table=True):
     username: str = Field(max_length=50, unique=True)
     password: str = Field(max_length=200)  # plaintext for testing only
     created_at: datetime = Field(
+        default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
