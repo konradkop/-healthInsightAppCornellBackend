@@ -12,7 +12,6 @@ from sqlmodel import Session, select
 
 from .models import User, engine
 
-
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)

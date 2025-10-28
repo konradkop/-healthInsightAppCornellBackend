@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, func
 from sqlmodel import Field, SQLModel, create_engine
 
-
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
