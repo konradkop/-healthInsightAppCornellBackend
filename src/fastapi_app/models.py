@@ -5,7 +5,7 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, func
+from sqlalchemy import Column, DateTime, func, text
 from sqlmodel import Field, SQLModel, create_engine
 from typing import Optional
 
@@ -39,6 +39,7 @@ if os.getenv("WEBSITE_HOSTNAME"):
             f"postgresql://{quote_plus(details['user'])}:{quote_plus(details['password'])}"
             f"@{details['host']}:{details['port']}/{details['dbname']}?sslmode={details['sslmode']}"
         )
+        logger.info("String constructed: " + sql_url)
 
 else:
     logger.info("Connecting to local PostgreSQL server based on .env file...")
@@ -52,7 +53,17 @@ else:
     sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
 
 logger.info("Creating SQL Engine")
-engine = create_engine(sql_url)
+
+try:
+    engine = create_engine(sql_url, pool_pre_ping=True)
+    with engine.connect() as conn:
+        conn.execute(text("SELECT 1"))
+        logger.info("✅ Successfully connected to the database!")
+
+except Exception as e:
+    logger.error("❌ Unexpected error during database connection:")
+    logger.exception(e)
+    sys.exit(1)
 
 
 def create_db_and_tables():
