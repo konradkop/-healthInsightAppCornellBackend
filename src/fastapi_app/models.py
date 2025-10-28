@@ -1,17 +1,29 @@
 import logging
 import os
 import typing
+import sys
 from datetime import datetime
 from urllib.parse import quote_plus
 from sqlalchemy import Column, DateTime, func
 from dotenv import load_dotenv
 from sqlmodel import Field, SQLModel, create_engine
 
+
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
+if not logger.hasHandlers():
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+
 sql_url = ""
 logger.info("Trying to connect to database...")
+
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
     env_connection_string = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")

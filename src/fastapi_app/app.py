@@ -1,15 +1,12 @@
 import logging
 import os
 import pathlib
-from datetime import datetime
 
 from azure.monitor.opentelemetry import configure_azure_monitor
-from fastapi import Depends, FastAPI, Form, Request, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import Depends, FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from sqlalchemy.sql import func
 from sqlmodel import Session, select
 from fastapi.middleware.cors import CORSMiddleware
 from .models import  User, engine
