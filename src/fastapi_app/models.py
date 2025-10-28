@@ -22,7 +22,7 @@ if not logger.hasHandlers():
 
 sql_url = ""
 logger.info("Trying to connect to database...")
-logger.info("V44444")
+logger.info("V555")
 
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
@@ -58,11 +58,10 @@ def create_db_and_tables():
     logger.info("Creating Database and tables")
     return SQLModel.metadata.create_all(engine)
 
-
 class User(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    username: str = Field(sa_column_kwargs={"unique": True}, max_length=50)
-    password: str = Field(max_length=200)  # plaintext for testing
+    username: str
+    password: str
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
