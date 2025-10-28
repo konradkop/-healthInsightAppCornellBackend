@@ -70,10 +70,17 @@ def create_db_and_tables():
     return SQLModel.metadata.create_all(engine)
 
 
+# class User(SQLModel, table=True):
+#     id: int | None = Field(default=None, primary_key=True)
+#     username: str = Field(max_length=50)
+#     password: str = Field(max_length=50)
+#     created_at: datetime = Field(
+#         default_factory=datetime.utcnow,
+#         sa_column=Column(DateTime(timezone=True), server_default=func.now())
+#     )
+
 class User(SQLModel, table=True):
-    username: str = Field(max_length=50)
-    password: str = Field(max_length=50)
-    created_at: datetime = Field(
-        default_factory=datetime.utcnow,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
-    )
+    id: int
+    username: str 
+    password: str 
+    created_at: datetime
