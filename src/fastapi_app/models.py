@@ -7,7 +7,6 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from sqlalchemy import Column, DateTime, func
 from sqlmodel import Field, SQLModel, create_engine
-from typing import Optional
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -23,6 +22,7 @@ if not logger.hasHandlers():
 
 sql_url = ""
 logger.info("Trying to connect to database...")
+logger.info("V33333")
 
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
@@ -60,7 +60,7 @@ def create_db_and_tables():
 
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(sa_column_kwargs={"unique": True}, max_length=50)
     password: str = Field(max_length=200)  # plaintext for testing
     created_at: datetime = Field(
