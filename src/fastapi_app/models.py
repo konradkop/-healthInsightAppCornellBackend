@@ -11,6 +11,7 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
 sql_url = ""
+logger.info("Trying to connect to database...")
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
     env_connection_string = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
