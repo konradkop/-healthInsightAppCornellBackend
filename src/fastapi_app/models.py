@@ -57,9 +57,9 @@ def create_db_and_tables():
 
 
 class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    username: str = Field(max_length=50, unique=True)
-    password: str = Field(max_length=200)  # plaintext for testing only
+    id: int = Field(default=None, primary_key=True)
+    username: str = Field(sa_column_kwargs={"unique": True}, max_length=50)
+    password: str = Field(max_length=200)  # plaintext for testing
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
