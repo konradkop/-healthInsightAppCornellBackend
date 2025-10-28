@@ -5,9 +5,8 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import Column, DateTime, func, text
+from sqlalchemy import String, DateTime, func, text, Integer
 from sqlmodel import Field, SQLModel, create_engine
-from typing import Optional
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -79,8 +78,22 @@ def create_db_and_tables():
 #         sa_column=Column(DateTime(timezone=True), server_default=func.now())
 #     )
 
-class User(SQLModel, table=True):
-    id: int
-    username: str 
-    password: str 
-    created_at: datetime
+class user_data(SQLModel, table=True):
+    id: int | None = Field(
+        default=None,
+        primary_key=True,
+        sa_type=Integer,
+        sa_column_kwargs={"autoincrement": True, "nullable": False}
+    )
+    username: str = Field(
+        sa_type=String,
+        sa_column_kwargs={"nullable": False, "unique": True, "length": 50}
+    )
+    password: str = Field(
+        sa_type=String,
+        sa_column_kwargs={"nullable": False, "length": 50}
+    )
+    created_at: datetime = Field(
+        sa_type=DateTime,
+        sa_column_kwargs={"server_default": func.now(), "nullable": False}
+    )
