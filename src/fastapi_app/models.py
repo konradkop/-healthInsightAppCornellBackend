@@ -71,7 +71,6 @@ def create_db_and_tables():
 
 
 class User(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(max_length=50)
     password: str = Field(max_length=50)
     created_at: datetime = Field(
