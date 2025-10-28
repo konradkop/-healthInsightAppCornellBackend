@@ -63,7 +63,6 @@ try:
 except Exception as e:
     logger.error("❌ Unexpected error during database connection:")
     logger.exception(e)
-    sys.exit(1)
 
 
 def create_db_and_tables():
@@ -72,7 +71,7 @@ def create_db_and_tables():
 
 
 class User(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(max_length=50)
     password: str = Field(max_length=50)
     created_at: datetime = Field(
