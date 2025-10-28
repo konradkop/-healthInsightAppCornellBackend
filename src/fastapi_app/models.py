@@ -22,6 +22,7 @@ if not logger.hasHandlers():
 
 sql_url = ""
 logger.info("Trying to connect to database...")
+logger.info("Test if this actually updates...")
 
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
@@ -49,10 +50,12 @@ else:
 
     sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
 
+logger.info("Creating SQL Engine")
 engine = create_engine(sql_url)
 
 
 def create_db_and_tables():
+    logger.info("Creating Database and tables")
     return SQLModel.metadata.create_all(engine)
 
 
