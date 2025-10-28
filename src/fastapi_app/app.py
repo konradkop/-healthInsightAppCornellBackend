@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .models import user_data, engine
+from .models import engine, user_data
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")

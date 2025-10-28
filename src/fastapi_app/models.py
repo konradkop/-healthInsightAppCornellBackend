@@ -5,7 +5,7 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import String, DateTime, func, text, Integer
+from sqlalchemy import DateTime, Integer, String, func, text
 from sqlmodel import Field, SQLModel, create_engine
 
 logger = logging.getLogger("app")
