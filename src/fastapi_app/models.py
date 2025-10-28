@@ -22,7 +22,7 @@ if not logger.hasHandlers():
 
 sql_url = ""
 logger.info("Trying to connect to database...")
-logger.info("V33333")
+logger.info("V44444")
 
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
