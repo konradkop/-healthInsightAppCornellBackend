@@ -1,6 +1,6 @@
 [
     {
-        "model": "relecloud.user_data",
+        "model": "relecloud.UserData",
         "pk": 1,
         "fields": {
             "username": "testuser1",
@@ -9,7 +9,7 @@
         }
     },
     {
-        "model": "relecloud.user_data",
+        "model": "relecloud.UserData",
         "pk": 2,
         "fields": {
             "username": "testuser2",

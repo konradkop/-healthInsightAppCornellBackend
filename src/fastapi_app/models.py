@@ -5,8 +5,9 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import DateTime, Integer, String, func, text
+from sqlalchemy import DateTime, Column, func, text
 from sqlmodel import Field, SQLModel, create_engine
+from typing import Optional
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -68,32 +69,11 @@ def create_db_and_tables():
     logger.info("Creating Database and tables")
     return SQLModel.metadata.create_all(engine)
 
-
-# class User(SQLModel, table=True):
-#     id: int | None = Field(default=None, primary_key=True)
-#     username: str = Field(max_length=50)
-#     password: str = Field(max_length=50)
-#     created_at: datetime = Field(
-#         default_factory=datetime.utcnow,
-#         sa_column=Column(DateTime(timezone=True), server_default=func.now())
-#     )
-
-class user_data(SQLModel, table=True):
-    id: int | None = Field(
-        default=None,
-        primary_key=True,
-        sa_type=Integer,
-        sa_column_kwargs={"autoincrement": True, "nullable": False}
-    )
-    username: str = Field(
-        sa_type=String,
-        sa_column_kwargs={"nullable": False, "unique": True, "length": 50}
-    )
-    password: str = Field(
-        sa_type=String,
-        sa_column_kwargs={"nullable": False, "length": 50}
-    )
+class UserData(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(max_length=50)
+    password: str = Field(max_length=50)
     created_at: datetime = Field(
-        sa_type=DateTime,
-        sa_column_kwargs={"server_default": func.now(), "nullable": False}
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )

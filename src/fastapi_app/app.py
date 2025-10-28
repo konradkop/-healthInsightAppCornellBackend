@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .models import engine, user_data
+from .models import engine, UserData
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
@@ -68,7 +68,7 @@ async def login(data: LoginRequest, session: Session = Depends(get_db_session)):
     if not data.username or not data.password:
         raise HTTPException(status_code=400, detail="Username and password are required")
 
-    user = session.exec(select(user_data).where(user_data.username == data.username)).first()
+    user = session.exec(select(UserData).where(UserData.username == data.username)).first()
     if not user or user.password != data.password:
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
