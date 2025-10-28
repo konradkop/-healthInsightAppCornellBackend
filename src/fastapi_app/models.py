@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-import typing
 from datetime import datetime
 from urllib.parse import quote_plus
 
