@@ -2,15 +2,17 @@ import logging
 import os
 import pathlib
 
-from azure.monitor.opentelemetry import configure_azure_monitor
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlmodel import Session, select
-from fastapi.middleware.cors import CORSMiddleware
-from .models import  User, engine
-from fastapi import HTTPException
+
+from azure.monitor.opentelemetry import configure_azure_monitor
+
+from .models import User, engine
+
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")

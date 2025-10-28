@@ -1,11 +1,12 @@
 import logging
 import os
-import typing
 import sys
+import typing
 from datetime import datetime
 from urllib.parse import quote_plus
-from sqlalchemy import Column, DateTime, func
+
 from dotenv import load_dotenv
+from sqlalchemy import Column, DateTime, func
 from sqlmodel import Field, SQLModel, create_engine
 
 
@@ -57,11 +58,8 @@ def create_db_and_tables():
     return SQLModel.metadata.create_all(engine)
 
 
-    
-from datetime import datetime
-
 class User(SQLModel, table=True):
-    id: typing.Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     username: str = Field(max_length=50, unique=True)
     password: str = Field(max_length=200)  # plaintext for testing only
     created_at: datetime = Field(
