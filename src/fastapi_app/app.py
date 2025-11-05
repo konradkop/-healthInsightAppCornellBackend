@@ -81,7 +81,7 @@ async def login(data: LoginRequest):
     return {
         "token": "dummy-token-12345",
         "user_id": 1,
-        "username": data.username or "test_user"
+        "username":"testuser1"
     }
 
 @app.post("/chat")
