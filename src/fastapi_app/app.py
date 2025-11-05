@@ -65,18 +65,24 @@ class LoginRequest(BaseModel):
     password: str
 
 
+# @app.post("/auth/login")
+# async def login(data: LoginRequest, session: Session = Depends(get_db_session)):
+#     if not data.username or not data.password:
+#         raise HTTPException(status_code=400, detail="Username and password are required")
+
+#     user = session.exec(select(UserData).where(UserData.username == data.username)).first()
+#     if not user or user.password != data.password:
+#         raise HTTPException(status_code=401, detail="Invalid username or password")
+
+#     token = f"dummy-token-for-{user.id}"
+#     return {"token": token, "user_id": user.id, "username": user.username}
 @app.post("/auth/login")
-async def login(data: LoginRequest, session: Session = Depends(get_db_session)):
-    if not data.username or not data.password:
-        raise HTTPException(status_code=400, detail="Username and password are required")
-
-    user = session.exec(select(UserData).where(UserData.username == data.username)).first()
-    if not user or user.password != data.password:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-
-    token = f"dummy-token-for-{user.id}"
-    return {"token": token, "user_id": user.id, "username": user.username}
-
+async def login(data: LoginRequest):
+    return {
+        "token": "dummy-token-12345",
+        "user_id": 1,
+        "username": data.username or "test_user"
+    }
 
 @app.post("/chat")
 async def chat_endpoint(chat_request: ChatRequest):
