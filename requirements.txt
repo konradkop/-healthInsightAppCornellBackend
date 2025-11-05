@@ -8,3 +8,4 @@ sqlmodel==0.0.20
 pydantic==2.12.3
 openai==2.6.0
 openai-agents==0.4.1
+pandas==2.2.1
