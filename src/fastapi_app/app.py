@@ -2,15 +2,17 @@ import logging
 import os
 import pathlib
 
+from fastapi_app.custom_agents import  get_agent_response
 from azure.monitor.opentelemetry import configure_azure_monitor
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+import httpx
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .models import engine, UserData
+from .models import ChatRequest, ChatResponse, engine, UserData
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
@@ -74,6 +76,21 @@ async def login(data: LoginRequest, session: Session = Depends(get_db_session)):
 
     token = f"dummy-token-for-{user.id}"
     return {"token": token, "user_id": user.id, "username": user.username}
+
+
+@app.post("/chat")
+async def chat_endpoint(chat_request: ChatRequest):
+    """
+    Endpoint that accepts chat messages and returns the AI's response.
+    """
+    try:
+        print(chat_request)
+        chat_request_dict = chat_request.dict()
+        response = await get_agent_response(chat_request_dict)
+        return {"response": response}
+    except Exception as e:
+        return {"error": str(e)}
+
 
 
 @app.get("/")
