@@ -5,7 +5,6 @@
 # """
 
 import os
-import pandas as pd
 from pydantic import BaseModel
 from openai import AsyncAzureOpenAI, BadRequestError
 from agents import (
@@ -98,53 +97,11 @@ async def mi_check_guardrail(
     )
 
 
-
-def create_sensing_prompt(
-    prompt, 
-    step_count_prompt, sleep_duration_prompt, hrv_prompt,
-    step_data, sleep_data, hrv_data
-):
-    """_summary_
-
-    prompt: <str>, the template prompt
-    step_count_prompt: <str>, the step count prompt
-    sleep_duration_prompt: <str>, the sleep duration prompt
-    hrv_prompt: <str>, the hrv prompt
-    step_data: pd.DataFrame, the step data
-    sleep_data: pd.DataFrame, the sleep data
-    hrv_data: pd.DataFrame, the hrv data
-    
-    return: <str>, the prompt with the templated data
-    """
-    # Add step data
-    if pd.isnull(step_data).sum().sum() == 0:
-        step_prompt_temp = step_count_prompt.replace(
-            '[INSERT STEP COUNT DATA]', step_data.to_markdown()
-        )
-        prompt += step_prompt_temp
-    
-    if pd.isnull(sleep_data).sum().sum() == 0:
-        sleep_duration_prompt_temp = sleep_duration_prompt.replace(
-            '[INSERT SLEEP DURATION DATA]', sleep_data.to_markdown()
-        )
-        prompt += sleep_duration_prompt_temp
-
-    if pd.isnull(hrv_data).sum().sum() == 0:
-        hrv_prompt_temp = hrv_prompt.replace(
-            '[INSERT HRV DATA]', hrv_data.to_markdown()
-        )
-        prompt += hrv_prompt_temp
-
-    print(prompt)
-    
-    return prompt
-
 # Motivational Interviewing Agent
 def create_agent(
     use_harm_guardrail=True,
     use_mi_check_guardrail=True,
     use_sensing_agent=False,
-    sensing_prompt=None
 ):
     """
     Create the agent.
@@ -157,7 +114,6 @@ def create_agent(
                             defaults to True
     use_sensing_agent: Whether to use the sensing agent
                        defaults to False
-    sensing_prompt: <str>, the sensing prompt
     """
     # Check guardrails
     guardrails = []
@@ -172,7 +128,6 @@ def create_agent(
         # Create sensing agent
         sensing_agent = Agent(
             name="Sensing Agent",
-            instructions=sensing_prompt,
             model=model,
         )
         # Make as a tool
@@ -200,7 +155,6 @@ REQUIRED_FIELDS = [
     "message",
     "use_harm_guardrail",
     "use_mi_check_guardrail",
-    "use_sensing_agent"
 ]
 
 
@@ -223,14 +177,12 @@ async def getResponse(chat_request: dict):
     use_harm_guardrail = chat_request.get("use_harm_guardrail", True)
     use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", True)
     use_sensing_agent = chat_request.get("use_sensing_agent", False)
-    sensing_prompt = chat_request.get("sensing_prompt")
 
     # Create the agent
     agent = create_agent(
         use_harm_guardrail=use_harm_guardrail,
         use_mi_check_guardrail=use_mi_check_guardrail,
         use_sensing_agent=use_sensing_agent,
-        sensing_prompt=sensing_prompt
     )
 
     # Run the agent
