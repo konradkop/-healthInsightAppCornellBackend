@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import DateTime, Column, func, text
 from sqlmodel import Field, SQLModel, create_engine
 from typing import List, Optional
+from pydantic import BaseModel
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -78,10 +79,14 @@ class UserData(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
 
+class Message(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
 class ChatRequest(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int
-    message: Optional[str] = None
+    messages: List[Message] 
     use_harm_guardrail: Optional[bool] = True
     use_mi_check_guardrail: Optional[bool] = True
     use_sensing_agent: Optional[bool] = False

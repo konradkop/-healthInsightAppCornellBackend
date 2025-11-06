@@ -24,6 +24,7 @@ from fastapi_app.mi_prompts import (
 )
 from fastapi_app.sensing_prompts import sensing_tool_description
 from fastapi import HTTPException
+from fastapi_app.agent_cache import get_or_create_agent, register_create_agent
 
 load_dotenv() 
 
@@ -148,23 +149,18 @@ def create_agent(
     )
     return agent
 
-
+register_create_agent(create_agent)
 
 REQUIRED_FIELDS = [
     "user_id",
-    "message",
+    "messages",  # changed from "message"
     "use_harm_guardrail",
     "use_mi_check_guardrail",
 ]
 
-
 async def getResponse(chat_request: dict):
-    """
-    Calls the agent with the messages field.
-    Returns response or raises exceptions.
-    """
     print(chat_request)
-    # Validate required fields
+
     missing_fields = [f for f in REQUIRED_FIELDS if f not in chat_request]
     if missing_fields:
         raise HTTPException(
@@ -172,20 +168,18 @@ async def getResponse(chat_request: dict):
             detail=f"Missing required fields: {', '.join(missing_fields)}"
         )
 
-    # Extract data from chat_request
-    messages = chat_request.get("message")
-    use_harm_guardrail = chat_request.get("use_harm_guardrail", True)
-    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", True)
+    messages = chat_request.get("messages")
+    use_harm_guardrail = chat_request.get("use_harm_guardrail", False)
+    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", False)
     use_sensing_agent = chat_request.get("use_sensing_agent", False)
 
-    # Create the agent
-    agent = create_agent(
+    agent = get_or_create_agent(
         use_harm_guardrail=use_harm_guardrail,
         use_mi_check_guardrail=use_mi_check_guardrail,
         use_sensing_agent=use_sensing_agent,
     )
 
-    # Run the agent
+    # Pass the full array of messages to the agent
     result = await Runner.run(
         starting_agent=agent,
         input=messages
@@ -193,7 +187,9 @@ async def getResponse(chat_request: dict):
 
     return result.final_output
 
-async def get_agent_response(chat_request):
+
+
+async def get_agent_response(chat_request: dict):
     print("Validating chat request:")
     try:
         response = await getResponse(chat_request)
@@ -204,5 +200,4 @@ async def get_agent_response(chat_request):
     except HTTPException as e:
         return {"error": e.detail}
     return response
-
 

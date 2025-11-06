@@ -92,8 +92,10 @@ async def chat_endpoint(chat_request: ChatRequest):
     try:
         print(chat_request)
         chat_request_dict = chat_request.dict()
+
         response = await get_agent_response(chat_request_dict)
         return {"response": response}
+
     except Exception as e:
         return {"error": str(e)}
 
