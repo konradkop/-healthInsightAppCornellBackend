@@ -87,17 +87,33 @@ async def login(data: LoginRequest):
 @app.post("/chat")
 async def chat_endpoint(chat_request: ChatRequest):
     """
-    Endpoint that accepts chat messages and returns the AI's response.
+    Endpoint that accepts chat messages and returns the AI's response,
+    optionally including health data as a system message.
     """
     try:
-        print(chat_request)
         chat_request_dict = chat_request.dict()
+        messages = chat_request_dict.get("messages", [])
 
-        response = await get_agent_response(chat_request_dict)
+        health_data = chat_request_dict.get("health_data")
+        if health_data:
+            healthDataMessage = (
+                f"User's latest health metrics:\n"
+                f"- Body Fat: {health_data.get('bodyFat', 'N/A')}%\n"
+                f"- Heart Rate: {health_data.get('heartRate', 'N/A')} bpm\n"
+                f"- Step Count: {health_data.get('stepCount', 'N/A')}\n"
+                f"- Active Energy: {health_data.get('activeEnergy', 'N/A')} kcal\n"
+                f"- Flights Climbed: {health_data.get('flightsClimbed', 'N/A')}"
+            )
+            messages.append({"role": "system", "content": healthDataMessage})
+
+        response = await get_agent_response({"messages": messages})
+
         return {"response": response}
 
     except Exception as e:
+        logger.exception("Error in /chat endpoint")
         return {"error": str(e)}
+
 
 
 

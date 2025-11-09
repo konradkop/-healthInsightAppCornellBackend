@@ -27,6 +27,7 @@ def get_or_create_agent(
     use_harm_guardrail: bool = True,
     use_mi_check_guardrail: bool = True,
     use_sensing_agent: bool = False,
+    reset_agent: bool = False,
 ) -> Agent:
     """
     Returns an MI Agent.
@@ -40,7 +41,7 @@ def get_or_create_agent(
         raise RuntimeError("create_agent function not registered in agent_cache")
 
     # Create a fresh agent if any of these flags are True
-    if use_harm_guardrail or use_mi_check_guardrail or use_sensing_agent:
+    if reset_agent:
         print("Creating new agent with custom settings")
         return _create_agent_fn(
             use_harm_guardrail=use_harm_guardrail,
@@ -52,8 +53,8 @@ def get_or_create_agent(
     if base_agent is None:
         print("Creating and caching base agent")
         base_agent = _create_agent_fn(
-            use_harm_guardrail=False,
-            use_mi_check_guardrail=False,
+            use_harm_guardrail=True,
+            use_mi_check_guardrail=True,
             use_sensing_agent=False,
         )
     return base_agent

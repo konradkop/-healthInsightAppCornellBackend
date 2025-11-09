@@ -7,7 +7,7 @@ from urllib.parse import quote_plus
 from dotenv import load_dotenv
 from sqlalchemy import DateTime, Column, func, text
 from sqlmodel import Field, SQLModel, create_engine
-from typing import List, Optional
+from typing import List, Optional, Any
 from pydantic import BaseModel
 
 logger = logging.getLogger("app")
@@ -91,6 +91,8 @@ class ChatRequest(SQLModel):
     use_mi_check_guardrail: Optional[bool] = True
     use_sensing_agent: Optional[bool] = False
     sensing_prompt: Optional[str] = None
+    reset_agent: Optional[bool] = None
+    health_data: Optional[dict[str, Any]] = None
     
 class ChatResponse(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)

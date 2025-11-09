@@ -152,15 +152,11 @@ def create_agent(
 register_create_agent(create_agent)
 
 REQUIRED_FIELDS = [
-    "user_id",
-    "messages",  # changed from "message"
-    "use_harm_guardrail",
-    "use_mi_check_guardrail",
+    "messages",
 ]
 
 async def getResponse(chat_request: dict):
     print(chat_request)
-
     missing_fields = [f for f in REQUIRED_FIELDS if f not in chat_request]
     if missing_fields:
         raise HTTPException(
@@ -169,21 +165,27 @@ async def getResponse(chat_request: dict):
         )
 
     messages = chat_request.get("messages")
-    use_harm_guardrail = chat_request.get("use_harm_guardrail", False)
-    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", False)
+    use_harm_guardrail = chat_request.get("use_harm_guardrail", True)
+    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", True)
     use_sensing_agent = chat_request.get("use_sensing_agent", False)
+    reset_agent = chat_request.get("reset_agent", False)
 
     agent = get_or_create_agent(
         use_harm_guardrail=use_harm_guardrail,
         use_mi_check_guardrail=use_mi_check_guardrail,
         use_sensing_agent=use_sensing_agent,
+        reset_agent=reset_agent,
     )
+
+    print("Running agent with messages:", messages)
 
     # Pass the full array of messages to the agent
     result = await Runner.run(
         starting_agent=agent,
         input=messages
     )
+
+    print("Agent final output:", result)
 
     return result.final_output
 
