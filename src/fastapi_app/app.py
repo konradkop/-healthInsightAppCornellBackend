@@ -99,10 +99,11 @@ async def chat_endpoint(chat_request: ChatRequest):
             healthDataMessage = (
                 f"User's latest health metrics:\n"
                 f"- Body Fat: {health_data.get('bodyFat', 'N/A')}%\n"
-                f"- Heart Rate: {health_data.get('heartRate', 'N/A')} bpm\n"
-                f"- Step Count: {health_data.get('stepCount', 'N/A')}\n"
-                f"- Active Energy: {health_data.get('activeEnergy', 'N/A')} kcal\n"
-                f"- Flights Climbed: {health_data.get('flightsClimbed', 'N/A')}"
+                f"- Last 7 days of Heart Rate: {health_data.get('heartRate', 'N/A')} bpm\n"
+                f"- Last 7 days of Step Count: {health_data.get('stepCount', 'N/A')}\n"
+                f"- Last 7 days of Active Energy: {health_data.get('activeEnergy', 'N/A')} kcal\n"
+                f"- Last 7 days of Flights Climbed: {health_data.get('flightsClimbed', 'N/A')}"
+                f"- Last 7 days of Sleep: {health_data.get('sleep', 'N/A')}"
             )
             messages.append({"role": "system", "content": healthDataMessage})
 
