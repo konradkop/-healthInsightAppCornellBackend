@@ -25,3 +25,5 @@ def drop_all():
 if __name__ == "__main__":
     logger.info("Create Database and tables from seed_data.py")
     create_db_and_tables()
+
+print("TESTING")
