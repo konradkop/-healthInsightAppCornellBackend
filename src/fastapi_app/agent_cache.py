@@ -24,8 +24,8 @@ def register_create_agent(fn: Callable[..., Agent]) -> None:
 
 
 def get_or_create_agent(
-    use_harm_guardrail: bool = True,
-    use_mi_check_guardrail: bool = True,
+    use_harm_guardrail: bool = False,
+    use_mi_check_guardrail: bool = False,
     use_sensing_agent: bool = False,
     reset_agent: bool = False,
 ) -> Agent:
