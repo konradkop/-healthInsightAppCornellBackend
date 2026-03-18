@@ -107,6 +107,17 @@ async def chat_endpoint(chat_request: ChatRequest):
             )
             messages.append({"role": "system", "content": healthDataMessage})
 
+        gps_data = chat_request_dict.get("gps_data")
+        print("gps data is: ", gps_data)
+        if gps_data:
+            gpsMessage = (
+                f"User's current location:\n"
+                f"- Latitude: {gps_data.get('latitude', 'N/A')}\n"
+                f"- Longitude: {gps_data.get('longitude', 'N/A')}\n"
+                f"- Accuracy: {gps_data.get('accuracy', 'N/A')} meters"
+            )
+            messages.append({"role": "system", "content": gpsMessage})
+
         response = await get_agent_response({"messages": messages})
 
         return {"response": response}

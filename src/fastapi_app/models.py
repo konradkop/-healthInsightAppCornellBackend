@@ -93,6 +93,7 @@ class ChatRequest(SQLModel):
     sensing_prompt: Optional[str] = None
     reset_agent: Optional[bool] = None
     health_data: Optional[dict[str, Any]] = None
+    gps_data: Optional[dict[str, Any]] = None
     
 class ChatResponse(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)

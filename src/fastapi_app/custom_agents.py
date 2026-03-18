@@ -165,8 +165,8 @@ async def getResponse(chat_request: dict):
         )
 
     messages = chat_request.get("messages")
-    use_harm_guardrail = chat_request.get("use_harm_guardrail", True)
-    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", True)
+    use_harm_guardrail = chat_request.get("use_harm_guardrail", False)
+    use_mi_check_guardrail = chat_request.get("use_mi_check_guardrail", False)
     use_sensing_agent = chat_request.get("use_sensing_agent", False)
     reset_agent = chat_request.get("reset_agent", False)
 
