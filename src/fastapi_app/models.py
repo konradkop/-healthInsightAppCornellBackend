@@ -9,6 +9,7 @@ from sqlalchemy import DateTime, Column, func, text
 from sqlmodel import Field, SQLModel, create_engine
 from typing import List, Optional, Any
 from pydantic import BaseModel
+from sqlalchemy.dialects.postgresql import JSONB
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -70,6 +71,7 @@ def create_db_and_tables():
     logger.info("Creating Database and tables")
     return SQLModel.metadata.create_all(engine)
 
+# anything with table=True will be stored in a table
 class UserData(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(max_length=50)
@@ -99,3 +101,44 @@ class ChatResponse(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field()
     reply: str = Field()
+
+# chatrequest just stores the types, chatMessage is what's actually going in the db@app.post("/chat")
+class ChatMessage(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    role: str = Field(max_length=20)  # "user" or "assistant"
+    content: str
+
+    health_data: Optional[dict] = Field(
+        default=None,
+        sa_column=Column(JSONB)
+    )
+
+    gps_data: Optional[dict] = Field(
+        default=None,
+        sa_column=Column(JSONB)
+    )
+
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+class GPSPayload(BaseModel):
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+
+class UserLocation(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    latitude: float
+    longitude: float
+    accuracy: Optional[float] = None
+
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )

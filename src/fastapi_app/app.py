@@ -12,7 +12,7 @@ import httpx
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from .models import ChatRequest, ChatResponse, engine, UserData
+from .models import ChatMessage, ChatRequest, ChatResponse, GPSPayload, UserLocation, engine, UserData
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
@@ -84,6 +84,7 @@ async def login(data: LoginRequest):
         "username":"testuser1"
     }
 
+# this is not authenticated, will need to add auth logic later
 @app.post("/chat")
 async def chat_endpoint(chat_request: ChatRequest):
     """
@@ -93,6 +94,40 @@ async def chat_endpoint(chat_request: ChatRequest):
     try:
         chat_request_dict = chat_request.dict()
         messages = chat_request_dict.get("messages", [])
+        user_id = chat_request.user_id
+
+
+        # ===== Store incoming user messages =====
+        with Session(engine) as session:
+            last_message = messages[-1]
+
+            db_msg = ChatMessage(
+                user_id=user_id,
+                role=last_message["role"],
+                content=last_message["content"],
+                health_data=chat_request.health_data,
+                gps_data=chat_request.gps_data,
+            )
+            session.add(db_msg)
+            session.commit()
+        with Session(engine) as session:
+            # fetch the last 5 locations for the user
+            statement = (
+                select(UserLocation.latitude, UserLocation.longitude, UserLocation.created_at)
+                .where(UserLocation.user_id == user_id)
+                .order_by(UserLocation.created_at.desc())
+                .limit(5)
+            )
+            recent_locations = session.exec(statement).all()
+
+            if recent_locations:
+                location_history_message = "User's recent location history:\n"
+                for loc in reversed(recent_locations):  # oldest first
+                    location_history_message += (
+                        f"- {loc.created_at}: "
+                        f"Lat {loc.latitude}, Lon {loc.longitude}\n"
+                    )
+                messages.append({"role": "system", "content": location_history_message})
 
         health_data = chat_request_dict.get("health_data")
         if health_data:
@@ -120,14 +155,76 @@ async def chat_endpoint(chat_request: ChatRequest):
 
         response = await get_agent_response({"messages": messages})
 
+
+        # ===== Store assistant response =====
+        with Session(engine) as session:
+            db_msg = ChatMessage(
+                user_id=user_id,
+                role="assistant",
+                content=response,
+            )
+            session.add(db_msg)
+            session.commit()
+
         return {"response": response}
 
     except Exception as e:
         logger.exception("Error in /chat endpoint")
         return {"error": str(e)}
 
+# this is not authenticated, will need to add auth logic later
+@app.get("/chat/history/{user_id}")
+def get_chat_history(user_id: int):
+    try:
+        with Session(engine) as session:
+            statement = (
+                select(ChatMessage)
+                .where(ChatMessage.user_id == user_id)
+                .order_by(ChatMessage.created_at)
+            )
+
+            db_messages = session.exec(statement).all()
+
+            # format for frontend
+            messages = [
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                }
+                for msg in db_messages
+            ]
+
+            return {"messages": messages}
+
+    except Exception as e:
+        logger.exception("Error fetching chat history")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# this is not authenticated, will need to add auth logic later
+from fastapi import Body
 
 
+@app.post("/location/{user_id}")
+def post_location(user_id: int, gps_data: GPSPayload = Body(...)):
+    """
+    Store a single GPS location for a user.
+    """ 
+    try:
+        with Session(engine) as session:
+            db_location = UserLocation(
+                user_id=user_id,
+                latitude=gps_data.latitude,
+                longitude=gps_data.longitude,
+                accuracy=gps_data.accuracy,
+            )
+            session.add(db_location)
+            session.commit()
+
+        return {"status": "success", "message": "Location saved"}
+
+    except Exception as e:
+        logger.exception("Error saving user location")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def root():
