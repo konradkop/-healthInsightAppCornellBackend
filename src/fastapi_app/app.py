@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import os
 import pathlib
@@ -11,8 +12,9 @@ from fastapi.templating import Jinja2Templates
 import httpx
 from pydantic import BaseModel
 from sqlmodel import Session, select
+from sqlalchemy.dialects.postgresql import insert
 
-from .models import ChatMessage, ChatRequest, ChatResponse, GPSPayload, UserLocation, engine, UserData
+from .models import ChatMessage, ChatRequest, ChatResponse, GPSPayload, UserLocation, engine, UserData, HeartRate, StepCount, Sleep, ActiveEnergy, FlightsClimbed, BodyFat
 
 # Setup logger and Azure Monitor:
 logger = logging.getLogger("app")
@@ -95,9 +97,9 @@ async def chat_endpoint(chat_request: ChatRequest):
         chat_request_dict = chat_request.dict()
         messages = chat_request_dict.get("messages", [])
         user_id = chat_request.user_id
+        health_data = chat_request_dict.get("health_data")
 
-
-        # ===== Store incoming user messages =====
+        # ===== Store incoming user messages and health data =====
         with Session(engine) as session:
             last_message = messages[-1]
 
@@ -105,11 +107,124 @@ async def chat_endpoint(chat_request: ChatRequest):
                 user_id=user_id,
                 role=last_message["role"],
                 content=last_message["content"],
-                health_data=chat_request.health_data,
+                health_data=health_data,
                 gps_data=chat_request.gps_data,
             )
+
+            # Heart Rate
+            for item in health_data.get("heartRate", {}).get("daily", []):
+                if not isinstance(item, dict):
+                    continue
+                if "value" not in item or "date" not in item:
+                    continue
+
+                stmt = insert(HeartRate).values(
+                    user_id=user_id,
+                    bpm=float(item["value"]),
+                    recorded_at=datetime.strptime(item["date"], "%Y-%m-%d"),
+                )
+
+                stmt = stmt.on_conflict_do_update(
+                    constraint="uq_heart_user_date",
+                    set_={
+                        "bpm": float(item["value"]),
+                    },
+                )
+
+                session.execute(stmt)
+
+            # Step Count
+            for item in health_data.get("stepCount", {}).get("daily", []):
+                if not isinstance(item, dict):
+                    continue
+                if "value" not in item or "date" not in item:
+                    continue
+
+                stmt = insert(StepCount).values(
+                    user_id=user_id,
+                    steps=int(item["value"]),
+                    recorded_at=datetime.strptime(item["date"], "%Y-%m-%d"),
+                ).on_conflict_do_update(
+                    constraint="uq_step_user_date",
+                    set_={"steps": int(item["value"])}
+                )
+
+                session.execute(stmt)
+
+            # Active Energy
+            for item in health_data.get("activeEnergy", {}).get("daily", []):
+                if not isinstance(item, dict):
+                    continue
+                if "value" not in item or "date" not in item:
+                    continue
+
+                stmt = insert(ActiveEnergy).values(
+                    user_id=user_id,
+                    kcal=float(item["value"]),
+                    recorded_at=datetime.strptime(item["date"], "%Y-%m-%d"),
+                ).on_conflict_do_update(
+                    constraint="uq_energy_user_date",
+                    set_={
+                        "kcal": float(item["value"]),
+                    },
+                )
+
+                session.execute(stmt)
+
+            # Flights Climbed
+            for item in health_data.get("flightsClimbed", {}).get("daily", []):
+                if not isinstance(item, dict):
+                    continue
+                if "value" not in item or "date" not in item:
+                    continue
+
+                stmt = insert(FlightsClimbed).values(
+                    user_id=user_id,
+                    flights=int(item["value"]),
+                    recorded_at=datetime.strptime(item["date"], "%Y-%m-%d"),
+                ).on_conflict_do_update(
+                    constraint="uq_flights_user_date",
+                    set_={
+                        "flights": int(item["value"]),
+                    },
+                )
+
+                session.execute(stmt)
+
+            # Sleep
+            for item in health_data.get("sleep", {}).get("daily", []):
+                if not isinstance(item, dict):
+                    continue
+                if "value" not in item or "date" not in item:
+                    continue
+
+                stmt = insert(Sleep).values(
+                    user_id=user_id,
+                    duration_hours=float(item["value"]),
+                    recorded_at=datetime.strptime(item["date"], "%Y-%m-%d"),
+                ).on_conflict_do_update(
+                    constraint="uq_sleep_user_date",
+                    set_={
+                        "duration_hours": float(item["value"]),
+                    },
+                )
+
+                session.execute(stmt)
+
+            # Body Fat (unchanged)
+            if health_data.get("bodyFat") is not None:
+                session.add(
+                    BodyFat(
+                        user_id=user_id,
+                        percentage=float(health_data["bodyFat"]),
+                        recorded_at=datetime.utcnow()
+                    )
+                )
+                
             session.add(db_msg)
             session.commit()
+
+
         with Session(engine) as session:
             # fetch the last 5 locations for the user
             statement = (
@@ -129,7 +244,7 @@ async def chat_endpoint(chat_request: ChatRequest):
                     )
                 messages.append({"role": "system", "content": location_history_message})
 
-        health_data = chat_request_dict.get("health_data")
+
         if health_data:
             healthDataMessage = (
                 f"User's latest health metrics:\n"
@@ -137,7 +252,7 @@ async def chat_endpoint(chat_request: ChatRequest):
                 f"- Last 7 days of Heart Rate: {health_data.get('heartRate', 'N/A')} bpm\n"
                 f"- Last 7 days of Step Count: {health_data.get('stepCount', 'N/A')}\n"
                 f"- Last 7 days of Active Energy: {health_data.get('activeEnergy', 'N/A')} kcal\n"
-                f"- Last 7 days of Flights Climbed: {health_data.get('flightsClimbed', 'N/A')}"
+                f"- Last 7 days of Flights Climbed: {health_data.get('flightsClimbed', 'N/A')}\n"
                 f"- Last 7 days of Sleep: {health_data.get('sleep', 'N/A')}"
             )
             messages.append({"role": "system", "content": healthDataMessage})

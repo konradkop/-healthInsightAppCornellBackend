@@ -5,7 +5,7 @@ from datetime import datetime
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import DateTime, Column, func, text
+from sqlalchemy import DateTime, Column, func, text, UniqueConstraint
 from sqlmodel import Field, SQLModel, create_engine
 from typing import List, Optional, Any
 from pydantic import BaseModel
@@ -142,3 +142,88 @@ class UserLocation(SQLModel, table=True):
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+
+class HeartRate(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    bpm: float
+
+    recorded_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "recorded_at", name="uq_heart_user_date"),
+    )
+
+class StepCount(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    steps: int
+
+    recorded_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "recorded_at", name="uq_step_user_date"),
+    )
+
+class Sleep(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    duration_hours: float
+
+    recorded_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "recorded_at", name="uq_sleep_user_date"),
+    )
+class ActiveEnergy(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    kcal: float
+
+    recorded_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "recorded_at", name="uq_energy_user_date"),
+    )
+class FlightsClimbed(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(index=True)
+
+    flights: int
+
+    recorded_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "recorded_at", name="uq_flights_user_date"),
+    )
+class BodyFat(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True) 
+    user_id: int = Field(index=True) 
+    percentage: float 
+    recorded_at: datetime = Field( 
+        default_factory=datetime.utcnow, 
+        sa_column=Column( DateTime(timezone=True), 
+        server_default=func.now(), ) )
+    
+    __table_args__ = (
+    UniqueConstraint("user_id", "recorded_at", name="uq_bodyfat_user_time"),
+)
