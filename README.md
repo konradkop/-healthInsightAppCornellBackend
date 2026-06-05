@@ -14,39 +14,178 @@ products:
   - azure-virtual-network
 urlFragment: msdocs-fastapi-postgresql-sample-app
 name: Deploy FastAPI application with PostgreSQL on Azure App Service (Python)
-description: This project is for research at Cornell Tect.
+description: This project is for research at Cornell Tech - a health insights application powered by FastAPI and PostgreSQL.
 ---
 
 <!-- YAML front-matter schema: https://review.learn.microsoft.com/en-us/help/contribute/samples/process/onboarding?branch=main#supported-metadata-fields-for-readmemd -->
 
-# Deploy FastAPI application with PostgreSQL via Azure App Service
+# Health Insight App - Backend API
 
-## Run the sample
+A FastAPI-powered backend application that provides health insights and AI-driven chat features. This is the backend REST API that powers the Health Insight application.
 
-This project has a [dev container configuration](.devcontainer/), which makes it easier to develop apps locally, deploy them to Azure, and monitor them. The easiest way to run this sample application is inside a GitHub codespace. Follow these steps:
+## What You'll Need Before Starting
 
-1. Fork this repository to your account. For instructions, see [Fork a repo](https://docs.github.com/get-started/quickstart/fork-a-repo).
+Make sure you have these installed on your computer:
 
-1. From the repository root of your fork, select **Code** > **Codespaces** > **+**.
+- **Python 3.9 or higher**: [Download Python](https://www.python.org/downloads/)
+- **PostgreSQL database**: Either [install locally](https://www.postgresql.org/download/) OR use a cloud database like Azure PostgreSQL
+- **Git**: To clone this repository
 
-1. In the codespace terminal, run the following commands:
+Verify your installation by opening a terminal and running:
+```bash
+python3 --version
+pip3 --version
+psql --version  # Only needed if installing PostgreSQL locally
+```
 
-   ```shell
-   # Create .env with environment variables
+## Quick Start: Running the Application
+
+### Step 1: Clone the Repository
+```bash
+git clone <repository-url>
+cd health-insight-app-cornell-2025-Backend
+```
+
+### Step 2: Set Up Your Environment Variables
+
+Create a `.env` file in the project root with your database connection details:
+
+```bash
+# Option A: Copy the sample file and edit it
+cp .env.sample .env
+
+# Then edit .env with your database details:
+DBNAME=health_insights_db
+DBHOST=localhost          # Or your database server hostname
+DBPORT=5432              # Default PostgreSQL port
+DBUSER=postgres          # Your database username
+DBPASS=your_password     # Your database password
+```
+
+**Need a quick PostgreSQL database for testing?**
+- **Option 1**: Install PostgreSQL locally and create a database named `health_insights_db`
+- **Option 2**: Use Azure PostgreSQL or another cloud service
+- **Option 3**: Use Docker: `docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres`
+
+### Step 3: Install Python Dependencies
+
+Open your terminal in the project root and run:
+
+```bash
+# Create a virtual environment (recommended)
+python3 -m venv venv
+
+# Activate the virtual environment
+# On macOS/Linux:
+source venv/bin/activate
+# On Windows:
+venv\Scripts\activate
+
+# Install required packages
+pip install -r src/requirements.txt
+
+# Install the app as an editable package
+pip install -e src
+```
+
+**What this does:**
+- `venv` = isolated Python environment to avoid conflicts with other projects
+- `pip install` = downloads and installs all the Python libraries this app needs (FastAPI, SQLAlchemy, etc.)
+
+### Step 4: Set Up the Database
+
+Initialize the database with tables and seed data:
+
+```bash
+python3 src/fastapi_app/seed_data.py
+```
+
+This creates the necessary database tables and prepares the database for your application.
+
+### Step 5: Start the Development Server
+
+```bash
+python3 -m uvicorn fastapi_app.app:app --reload --port 8000
+```
+
+**Success!** Your backend is now running. You should see:
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000
+INFO:     Application startup complete
+```
+
+### Step 6: Test the API
+
+Open your browser and visit:
+- **API Documentation (Interactive)**: http://localhost:8000/docs
+- **Alternative API Docs**: http://localhost:8000/redoc
+
+The `/docs` page is interactive - you can test API endpoints right from your browser!
+
+## Common Endpoints
+
+Once the server is running, here are some endpoints you can test:
+
+- **Login**: `POST /auth/login`
+  ```json
+  {
+    "username": "testuser1",
+    "password": "password"
+  }
+  ```
+
+- **Chat with AI**: `POST /chat`
+  - Send messages to get AI-powered health insights
+
+- **View API Documentation**: `GET /docs`
+  - Interactive interface to explore all available endpoints
+
+## Troubleshooting
+
+### Error: "Database connection failed"
+- ✓ Check that PostgreSQL is running
+- ✓ Verify your `.env` file has correct database credentials
+- ✓ Ensure the database name in DBNAME exists in PostgreSQL
+
+### Error: "Module 'fastapi_app' not found"
+- ✓ Run `pip install -e src` in the project root
+- ✓ Make sure your virtual environment is activated
+
+### Error: "Port 8000 already in use"
+- ✓ Use a different port: `python3 -m uvicorn fastapi_app.app:app --reload --port 8001`
+
+### Application is running but won't connect
+- ✓ Make sure your `.env` file is in the project root (same folder as README.md)
+- ✓ Verify CORS settings in `src/fastapi_app/app.py` if connecting from a frontend
+
+## Stop the Development Server
+
+Press `Ctrl+C` in your terminal to stop the server.
+
+## Next Steps
+
+- Check the interactive API docs at http://localhost:8000/docs
+- Explore the code structure in `src/fastapi_app/`
+- Read the individual module docstrings for specific features
+
+## Using GitHub Codespaces (Easy Alternative)
+
+If you want to skip local setup:
+
+1. Fork this repository to your account
+2. Click **Code** → **Codespaces** → **+** to create a new codespace
+3. In the codespace terminal, run:
+   ```bash
    cp .env.sample.devcontainer .env
-
-   # Install requirements
-   python3 -m pip install -r src/requirements.txt
-
-   # Install the app as an editable package
-   python3 -m pip install -e src
-
-   # Run database migrations
+   pip install -r src/requirements.txt
+   pip install -e src
    python3 src/fastapi_app/seed_data.py
-
-   # Start the development server
-   python3 -m uvicorn fastapi_app:app --reload --port=8000
+   python3 -m uvicorn fastapi_app.app:app --reload --port 8000
    ```
+
+## Deploying to Production
+
+This app is configured for Azure App Service deployment. See `.github/` and `.devcontainer/` for deployment configuration details.
 
 1. When you see the message `Your application running on port 8000 is available.`, click **Open in Browser**.
 
