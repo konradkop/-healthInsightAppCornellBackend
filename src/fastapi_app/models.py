@@ -32,6 +32,15 @@ if os.getenv("WEBSITE_HOSTNAME"):
     env_connection_string = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
     if env_connection_string is None:
         logger.info("Missing environment variable AZURE_POSTGRESQL_CONNECTIONSTRING")
+        logger.info("Connecting to local PostgreSQL server based on .env file...")
+        load_dotenv()
+        POSTGRES_USERNAME = os.environ.get("DBUSER")
+        POSTGRES_PASSWORD = os.environ.get("DBPASS")
+        POSTGRES_HOST = os.environ.get("DBHOST")
+        POSTGRES_DATABASE = os.environ.get("DBNAME")
+        POSTGRES_PORT = os.environ.get("DBPORT", 5432)
+        sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
+        logger.info("String constructed: " + sql_url)
     else:
         # Parse the connection string
         details = dict(item.split('=') for item in env_connection_string.split())
@@ -43,16 +52,6 @@ if os.getenv("WEBSITE_HOSTNAME"):
         )
         logger.info("String constructed: " + sql_url)
 
-else:
-    logger.info("Connecting to local PostgreSQL server based on .env file...")
-    load_dotenv()
-    POSTGRES_USERNAME = os.environ.get("DBUSER")
-    POSTGRES_PASSWORD = os.environ.get("DBPASS")
-    POSTGRES_HOST = os.environ.get("DBHOST")
-    POSTGRES_DATABASE = os.environ.get("DBNAME")
-    POSTGRES_PORT = os.environ.get("DBPORT", 5432)
-
-    sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
 
 logger.info("Creating SQL Engine")
 
