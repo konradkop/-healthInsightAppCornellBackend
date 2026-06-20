@@ -25,32 +25,33 @@ if not logger.hasHandlers():
 
 sql_url = ""
 logger.info("Trying to connect to database...")
-
+env_connection_string = None
 
 if os.getenv("WEBSITE_HOSTNAME"):
     logger.info("Connecting to Azure PostgreSQL Flexible server based on AZURE_POSTGRESQL_CONNECTIONSTRING...")
     env_connection_string = os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING")
-    if env_connection_string is None:
-        logger.info("Missing environment variable AZURE_POSTGRESQL_CONNECTIONSTRING")
-        logger.info("Connecting to local PostgreSQL server based on .env file...")
-        load_dotenv()
-        POSTGRES_USERNAME = os.environ.get("DBUSER")
-        POSTGRES_PASSWORD = os.environ.get("DBPASS")
-        POSTGRES_HOST = os.environ.get("DBHOST")
-        POSTGRES_DATABASE = os.environ.get("DBNAME")
-        POSTGRES_PORT = os.environ.get("DBPORT", 5432)
-        sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
-        logger.info("String constructed: " + sql_url)
-    else:
-        # Parse the connection string
-        details = dict(item.split('=') for item in env_connection_string.split())
 
-        # Properly format the URL for SQLAlchemy
-        sql_url = (
-            f"postgresql://{quote_plus(details['user'])}:{quote_plus(details['password'])}"
-            f"@{details['host']}:{details['port']}/{details['dbname']}?sslmode={details['sslmode']}"
-        )
-        logger.info("String constructed: " + sql_url)
+if env_connection_string is None:
+    logger.info("Missing environment variable AZURE_POSTGRESQL_CONNECTIONSTRING")
+    logger.info("Connecting to local PostgreSQL server based on .env file...")
+    load_dotenv()
+    POSTGRES_USERNAME = os.environ.get("PGUSER")
+    POSTGRES_PASSWORD = os.environ.get("PGPASSWORD")
+    POSTGRES_HOST = os.environ.get("PGHOST")
+    POSTGRES_DATABASE = os.environ.get("PGDATABASE")
+    POSTGRES_PORT = os.environ.get("PGPORT", 5432)
+    sql_url = f"postgresql://{POSTGRES_USERNAME}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DATABASE}"
+    logger.info("String constructed: " + sql_url)
+else:
+    # Parse the connection string
+    details = dict(item.split('=') for item in env_connection_string.split())
+
+    # Properly format the URL for SQLAlchemy
+    sql_url = (
+        f"postgresql://{quote_plus(details['user'])}:{quote_plus(details['password'])}"
+        f"@{details['host']}:{details['port']}/{details['dbname']}?sslmode={details['sslmode']}"
+    )
+    logger.info("String constructed: " + sql_url)
 
 
 logger.info("Creating SQL Engine")

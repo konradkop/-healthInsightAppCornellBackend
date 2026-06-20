@@ -55,11 +55,11 @@ Create a `.env` file in the project root with your database connection details:
 cp .env.sample .env
 
 # Then edit .env with your database details:
-DBNAME=health_insights_db
-DBHOST=localhost          # Or your database server hostname
-DBPORT=5432              # Default PostgreSQL port
-DBUSER=postgres          # Your database username
-DBPASS=your_password     # Your database password
+PGDATABASE=health_insights_db
+PGHOST=localhost          # Or your database server hostname
+PGPORT=5432              # Default PostgreSQL port
+PGUSER=postgres          # Your database username
+PGPASSWORD=your_password     # Your database password
 ```
 
 **Need a quick PostgreSQL database for testing?**
@@ -145,7 +145,7 @@ Once the server is running, here are some endpoints you can test:
 ### Error: "Database connection failed"
 - ✓ Check that PostgreSQL is running
 - ✓ Verify your `.env` file has correct database credentials
-- ✓ Ensure the database name in DBNAME exists in PostgreSQL
+- ✓ Ensure the database name in PGDATABASE exists in PostgreSQL
 
 ### Error: "Module 'fastapi_app' not found"
 - ✓ Run `pip install -e src` in the project root
